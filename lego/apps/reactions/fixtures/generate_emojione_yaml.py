@@ -11,9 +11,8 @@ fixture_fields = []
 for key, emoji in data.items():
     fixture_fields.append(dict(
         model="reactions.ReactionType",
-        pk=emoji['name'],
         fields=dict(
-            short_code=emoji['shortname'],
+            short_code=emoji['shortname'].replace(':', ''),
             unicode=emoji['unicode']
         )
     ))

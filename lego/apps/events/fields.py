@@ -10,7 +10,9 @@ class ChargeStatusField(serializers.Field):
 
     def to_representation(self, value):
         request = self.context.get('request', None)
-        if request and request.user.is_authenticated():
-            if request.user == value.user:
+        if request:
+            if request == 'websocket':
                 return value.charge_status
-                # Add admin permissions
+            if request.user.is_authenticated() and request.user == value.user:
+                return value.charge_status
+            # Add admin permissions

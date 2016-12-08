@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from channels import Group
+from djangorestframework_camel_case.render import camelize
 
 from lego.apps.events.serializers import EventReadDetailedSerializer, RegistrationReadSerializer
 from lego.apps.permissions.filters import filter_queryset
@@ -30,10 +31,10 @@ def find_event_groups(user):
 
 def notify_registration(type, registration):
     group = group_for_user(registration.user)
-    serializer = RegistrationReadSerializer(registration)
+    serializer = RegistrationReadSerializer(registration, context={'request': 'websocket'})
     notify_group(group, {
         'type': type,
-        'payload': serializer.data
+        'payload': camelize(serializer.data)
     })
 
 
@@ -44,7 +45,7 @@ def notify_unregistration(type, registration, pool_id):
     payload['from_pool'] = pool_id
     notify_group(group, {
         'type': type,
-        'payload': payload
+        'payload': camelize(payload)
     })
 
 

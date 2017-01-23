@@ -1,3 +1,4 @@
+import channels
 from channels.handler import AsgiHandler
 from channels.routing import include, route
 from django.conf import settings
@@ -21,8 +22,24 @@ websocket_routes = [
     route('websocket.disconnect', handle_disconnect)
 ]
 
+def slack_message(message):
+    print('slack message', message)
+    print(message.content)
+
+    # message.channel_layer.send('slack.send', {'text': 'Why hello there!', 'channel': 'G3TUMF2AH'})
+
+
+def slack_hello(message):
+    print(message)
+
+slack_routes = [
+    route('slack.message', slack_message),
+    route('slack.hello', slack_hello)
+]
+
 routing = [
-    include(websocket_routes)
+    include(websocket_routes),
+    include(slack_routes)
 ]
 
 if settings.WS_SERVER:

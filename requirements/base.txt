@@ -21,6 +21,7 @@ boto3==1.4.3
 channels==1.0.2
 asgi_redis==1.0.0
 daphne==1.0.1
+djangobot==0.1
 
 djangorestframework==3.5.3
 djangorestframework-jwt==1.9.0

@@ -11,6 +11,16 @@ class InterestGroupSerializer(serializers.ModelSerializer):
             'name',
             'number_of_users',
             'description',
-            'description_long',
+            'text',
             'permissions'
+        )
+
+
+class InterestGroupCreateAndUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterestGroup
+        fields = (
+            'id',
+            'name',
+            'text',
         )

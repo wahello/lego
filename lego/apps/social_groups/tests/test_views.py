@@ -8,7 +8,7 @@ from lego.apps.users.models import AbakusGroup, User
 _test_group_data = {
     'name': 'testnewinterestgroup',
     'description': 'test new interest group',
-    'description_long': 'hooooooly moly'
+    'text': 'hooooooly moly'
 }
 
 _serializer_fields = (
@@ -16,7 +16,7 @@ _serializer_fields = (
     'name',
     'number_of_users',
     'description',
-    'description_long',
+    'text',
     'permissions',
     'action_grant'
 )
@@ -26,7 +26,7 @@ _rendered_serializer_fields = (
     'name',
     'numberOfUsers',
     'description',
-    'descriptionLong',
+    'text',
     'permissions'
 )
 
@@ -188,7 +188,7 @@ class UpdateInterestGroupAPITestCase(APITestCase):
         self.modified_group = {
             'name': 'modified_interest_group',
             'description': 'this is a modified interest group',
-            'description_long': 'this is a modified interest group with a larger description',
+            'text': 'this is a modified interest group with a larger description',
             'parent': parent_group.pk
         }
 

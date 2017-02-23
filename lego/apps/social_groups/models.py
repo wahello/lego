@@ -6,7 +6,7 @@ from lego.apps.users.models import AbakusGroup
 class SocialGroup(AbakusGroup):
     # TODO: add feed
     # TODO: add picture
-    description_long = models.TextField(blank=True)
+    text = models.TextField(blank=True)
 
     class Meta:
         abstract = True

@@ -51,6 +51,8 @@ class Event(Content, BasisModel, ObjectPermissionsModel):
     payment_due_date = models.DateTimeField(null=True)
     payment_overdue_notified = models.BooleanField(default=False)
 
+    survey = models.OneToOneField('survey.Survey', null=True, blank=True)
+
     def __str__(self):
         return self.title
 

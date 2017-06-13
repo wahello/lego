@@ -1,28 +1,4 @@
 pipeline:
-  test:
-    image: python:3.6
-    when:
-      event: push
-    environment:
-      - CASS_DRIVER_NO_CYTHON=1
-      - CASS_DRIVER_NO_EXTENSIONS=1
-      - LANG=C.UTF-8
-      - DATABASE=database
-      - CACHE=cache
-      - CASSANDRA=cassandra
-    commands:
-      - pip install tox
-      - pip install -r requirements/test.txt
-      - make ci_settings
-
-      - python manage.py migrate
-      - python manage.py missing_migrations
-
-      - tox -e tests
-      - tox -e isort
-      - tox -e flake8
-      - tox -e coverage
-      - tox -e docs
 
   docker:
     image: plugins/docker
@@ -31,17 +7,9 @@ pipeline:
         - prod
     registry: https://registry.abakus.no
     repo: registry.abakus.no/webkom/lego
+    secrets: [ docker_username, docker_password ]
     tags:
       - ${DRONE_BRANCH}-${DRONE_COMMIT_SHA:0:7}
     build_args:
       - RELEASE=${DRONE_BRANCH}-${DRONE_COMMIT_SHA:0:7}
 
-services:
-  database:
-    image: postgres:9.5
-    environment:
-      - POSTGRES_USER=lego
-  cache:
-    image: redis
-  cassandra:
-    image: cassandra:3

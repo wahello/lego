@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from lego.apps.events.serializers.events import EventReadSerializer
 from lego.apps.surveys import constants
-from lego.apps.surveys.models import Alternative, Answer, Question, Submission, Survey
+from lego.apps.surveys.models import Alternative, Answer, Question, Submission, Survey, Template
 from lego.apps.users.serializers.users import PublicUserSerializer
 from lego.utils.serializers import BasisModelSerializer
 
@@ -79,19 +79,29 @@ class SurveyReadDetailedSerializer(BasisModelSerializer):
 
 
 class SurveyCreateAndUpdateSerializer(BasisModelSerializer):
-    is_clone = serializers.BooleanField()
+    clone_id = serializers.IntegerField()
 
     class Meta:
         model = Survey
-        fields = ('id', 'title', 'active_from', 'is_clone', 'event')
+        fields = ('id', 'title', 'active_from', 'clone_id', 'event', 'questions')
 
     def create(self, validated_data):
-        is_clone = validated_data['is_clone']
-        event = validated_data['event']
-        if is_clone:
-            template = Survey.objects.get(template_type=event.event_type)
-            return template.copy(event, validated_data)
-        return Survey.objects.create(**validated_data)
+        clone_id = validated_data.pop('clone_id', None)
+        event = validated_data.pop('event', None)
+        questions = validated_data.pop('questions', None)
+        if clone_id:
+            template = Template.objects.get(pk=clone_id)
+            survey = template.generate_survey(event, validated_data)
+        else:
+            survey = Survey.objects.create(**validated_data)
+
+        if questions:
+            for question in questions:
+                alternatives = questions.pop('alternatives', None)
+                Question.objects.create(**question)
+                for alternative in alternatives:
+                    Alternative.objects.create(**alternative)
+        return survey
 
 
 class SubmissionReadDetailedSerializer(BasisModelSerializer):

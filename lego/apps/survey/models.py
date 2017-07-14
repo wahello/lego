@@ -74,7 +74,19 @@ class Submission(BasisModel):
         self.save()
 
 
-class Answer(BasisModel):
-    submission = models.ForeignKey(Submission, related_name='answers')
-    alternative = models.ForeignKey(Alternative, related_name='answers')
+class MultipleChoiceAnswer(BasisModel):
+    submission = models.ForeignKey(Submission, related_name=???)
+    question = models.ForeignKey(Question, related_name='answers')
+    selected_answers = models.???
+
+
+class SingleChoiceAnswer(BasisModel)
+    submission = models.ForeignKey(Submission, related_name=???)
+    question = models.ForeignKey(Submission, related_name='answers')
+    selected_answer = models.PositiveSmallIntegerField(choices=???)
+
+
+class TextAnswer(BasisModel):
+    submission = models.ForeignKey(Submission, related_name=???)
+    Question = models.ForeignKey(Question, related_name='answers')
     answer_text = models.TextField(max_length=255, blank=True)

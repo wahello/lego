@@ -1,11 +1,12 @@
-from rest_framework import viewsets
+from rest_framework import decorators, viewsets
 
-from lego.apps.survey.models import Alternative, Answer, Question, Submission, Survey
-from lego.apps.survey.serializers import (AlternativeSerializer, AnswerSerializer,
-                                          QuestionSerializer, SubmissionCreateAndUpdateSerializer,
+from lego.apps.survey.models import Alternative, Question, Submission, Survey
+from lego.apps.survey.serializers import (AnswerSerializer,
+                                          SubmissionCreateAndUpdateSerializer,
                                           SubmissionReadDetailedSerializer,
                                           SubmissionReadSerializer, SurveyCreateAndUpdateSerializer,
-                                          SurveyReadDetailedSerializer, SurveyReadSerializer)
+                                          SurveyReadDetailedSerializer, SurveyReadSerializer,
+                                          QuestionSerializer, AlternativeSerializer)
 
 
 class SurveyViewSet(viewsets.ModelViewSet):
@@ -18,33 +19,22 @@ class SurveyViewSet(viewsets.ModelViewSet):
             return SurveyReadDetailedSerializer
         return SurveyReadSerializer
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        survey = Survey.objects.get(instance.id)
+        survey.delete()
 
-class SubmissionViewSet(viewsets.ModelViewSet):
-    queryset = Submission.objects.all()
+    @decorators.detail_route(methods=['POST'])
+    def submit(self, request, *args, **kwargs):
+        #TODO
+        pass
 
-    def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return SubmissionCreateAndUpdateSerializer
-        elif self.action in ['retrieve']:
-            return SubmissionReadDetailedSerializer
-        return SubmissionReadSerializer
+    @decorators.list_route(methods=['GET'])
+    def all(self, request, *args, **kwargs):
+        #TODO
+        pass
 
-    def get_queryset(self):
-        survey_id = self.kwargs.get('survey_pk')
-        if survey_id:
-            return Submission.objects.filter(survey=survey_id)
-
-
-class QuestionViewSet(viewsets.ModelViewSet):
-    queryset = Question.objects.all()
-    serializer_class = QuestionSerializer
-
-
-class AlternativeViewSet(viewsets.ModelViewSet):
-    queryset = Alternative.objects.all()
-    serializer_class = AlternativeSerializer
-
-
-class AnswerViewSet(viewsets.ModelViewSet):
-    queryset = Answer.objects.all()
-    serializer_class = AnswerSerializer
+    @decorators.detail_route(methods=['GET'])
+    def statistics(self, request, *args,):
+        #TODO
+        pass

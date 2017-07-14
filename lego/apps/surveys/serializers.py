@@ -1,14 +1,14 @@
 from rest_framework import serializers
 
-from lego.apps.events.serializers import EventReadSerializer
-from lego.apps.survey.constants import QUESTION_TYPES
-from lego.apps.survey.models import Alternative, Answer, Question, Submission, Survey
+from lego.apps.events.serializers.events import EventReadSerializer
+from lego.apps.surveys import constants
+from lego.apps.surveys.models import Alternative, Answer, Question, Submission, Survey
 from lego.apps.users.serializers.users import PublicUserSerializer
 from lego.utils.serializers import BasisModelSerializer
 
 
 class QuestionSerializer(BasisModelSerializer):
-    question_type = serializers.ChoiceField(choices=QUESTION_TYPES)
+    question_type = serializers.ChoiceField(choices=constants.ALTERNATIVE_TYPES)
 
     class Meta:
         model = Question

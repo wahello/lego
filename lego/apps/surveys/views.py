@@ -1,12 +1,8 @@
 from rest_framework import decorators, viewsets
 
-from lego.apps.survey.models import Alternative, Question, Submission, Survey
-from lego.apps.survey.serializers import (AnswerSerializer,
-                                          SubmissionCreateAndUpdateSerializer,
-                                          SubmissionReadDetailedSerializer,
-                                          SubmissionReadSerializer, SurveyCreateAndUpdateSerializer,
-                                          SurveyReadDetailedSerializer, SurveyReadSerializer,
-                                          QuestionSerializer, AlternativeSerializer)
+from lego.apps.surveys.models import Survey
+from lego.apps.surveys.serializers import (SurveyCreateAndUpdateSerializer,
+                                           SurveyReadDetailedSerializer, SurveyReadSerializer)
 
 
 class SurveyViewSet(viewsets.ModelViewSet):

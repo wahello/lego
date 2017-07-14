@@ -1,0 +1,7 @@
+- fields:
+    title: Start
+    active_from: '2016-10-27T20:00:00+00:00'
+    is_clone: False
+    event: 1
+  model: surveys.Survey
+  pk: 1

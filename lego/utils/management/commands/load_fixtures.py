@@ -95,6 +95,7 @@ class Command(BaseCommand):
             call_command('loaddata', 'lego/apps/oauth/fixtures/development_applications.yaml')
             call_command('loaddata', 'lego/apps/reactions/fixtures/emojione_reaction_types.yaml')
             call_command('loaddata', 'lego/apps/joblistings/fixtures/development_joblistings.yaml')
+            call_command('loaddata', 'lego/apps/surveys/fixtures/development_surveys.yaml')
             self.update_event_dates()
         log.info('Done!')
 

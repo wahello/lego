@@ -23,7 +23,7 @@ from lego.apps.restricted.views import RestrictedMailViewSet
 from lego.apps.search.views import AutocompleteViewSet, SearchViewSet
 from lego.apps.slack.views import SlackInviteViewSet
 from lego.apps.social_groups.views import InterestGroupViewSet
-from lego.apps.surveys.views import SurveyViewSet
+from lego.apps.surveys.views import SubmissionViewSet, SurveyViewSet
 from lego.apps.users.views.abakus_groups import AbakusGroupViewSet
 from lego.apps.users.views.memberships import MembershipViewSet
 from lego.apps.users.views.penalties import PenaltyViewSet
@@ -84,4 +84,4 @@ router.register(r'calendar-token', ICalTokenViewset, base_name='calendar-token')
 router.register(r'device-apns', APNSDeviceViewSet)
 router.register(r'device-gcm', GCMDeviceViewSet)
 router.register(r'survey', SurveyViewSet, base_name='survey')
-#router.register(r'survey/(?P<survey_pk>\d+)/submissions', SubmissionViewSet)
+router.register(r'survey/(?P<survey_pk>\d+)/submissions', SubmissionViewSet, base_name='submission')

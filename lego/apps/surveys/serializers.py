@@ -1,16 +1,10 @@
+from django.db import transaction
 from rest_framework import serializers
 
-from lego.apps.events.serializers.events import EventReadSerializer
 from lego.apps.surveys import constants
 from lego.apps.surveys.models import Alternative, Answer, Question, Submission, Survey, Template
 from lego.apps.users.serializers.users import PublicUserSerializer
 from lego.utils.serializers import BasisModelSerializer
-
-
-class QuestionReadSerializer(BasisModelSerializer):
-    class Meta:
-        model = Question
-        fields = ('id', 'question_type', 'question_text',  'mandatory')
 
 
 class AlternativeCreateAndUpdateSerializer(BasisModelSerializer):
@@ -28,13 +22,29 @@ class AlternativeCreateAndUpdateSerializer(BasisModelSerializer):
 
     def validate_alternative_type(self, value):
         question = Question.objects.get(pk=self.context['view'].kwargs['question_pk'])
-        if question.question_type == 1 and value == 1:
+        if question.question_type == value == constants.CHECK_BOX:
             return value
-        elif question.question_type == 2 and value in [2, 3]:
+        elif question.question_type == constants.CHECK_BOX\
+                and value in [constants.CHECK_BOX, constants.TEXT_BOX]:
             return value
-        elif question.question_type == 3 and value == 3:
+        elif question.question_type == value == constants.TEXT_BOX:
             return value
         raise serializers.ValidationError('This alternative type does not match the question type')
+
+
+class AlternativeReadSerializer(BasisModelSerializer):
+    class Meta:
+        model = Alternative
+        fields = ('id', 'alternative_text', 'alternative_type')
+        extra_kwargs = {'id': {'read_only': False, 'required': False}}
+
+
+class QuestionReadSerializer(BasisModelSerializer):
+    alternatives = AlternativeReadSerializer(many=True)
+
+    class Meta:
+        model = Question
+        fields = ('id', 'question_type', 'question_text',  'mandatory', 'alternatives')
 
 
 class QuestionCreateAndUpdateSerializer(BasisModelSerializer):
@@ -49,7 +59,9 @@ class QuestionCreateAndUpdateSerializer(BasisModelSerializer):
     def create(self, validated_data):
         survey = Survey.objects.get(pk=self.context['view'].kwargs['survey_pk'])
         relative_index = survey.question.count() + 1
-        question = Question.objects.create(survey=survey, relative_index=relative_index, **validated_data)
+        question = Question.objects.create(
+            survey=survey, relative_index=relative_index, **validated_data
+        )
         return question
 
 
@@ -59,27 +71,49 @@ class AnswerSerializer(BasisModelSerializer):
         fields = ('id', 'submission', 'alternative', 'answer_text')
 
 
-class SurveyReadSerializer(BasisModelSerializer):
-    event = EventReadSerializer()
-
-    class Meta:
-        model = Survey
-        fields = ('id', 'title', 'active_from', 'event')
-
-
 class SubmissionReadSerializer(BasisModelSerializer):
     user = PublicUserSerializer()
-    survey = SurveyReadSerializer()
 
     class Meta:
         model = Submission
-        fields = ('id', 'user', 'survey', 'submitted', 'submitted_time')
+        fields = ('id', 'user', 'submitted', 'submitted_time')
+
+
+class SubmissionReadDetailedSerializer(BasisModelSerializer):
+    user = PublicUserSerializer()
+    answers = AnswerSerializer(many=True)
+
+    class Meta:
+        model = Submission
+        fields = ('id', 'user', 'survey', 'submitted', 'submitted_time', 'answers')
+
+
+class SubmissionCreateAndUpdateSerializer(BasisModelSerializer):
+    class Meta:
+        model = Submission
+        fields = ('id', 'user', 'answers')
+
+    def create(self, validated_data):
+        survey_id = self.context['view'].kwargs['survey_pk']
+        answers = validated_data.pop('answers', [])
+        with transaction.atomic():
+            submission = Submission.objects.create(survey_id=survey_id, **validated_data)
+            for answer in answers:
+                Answer.objects.create(submission=submission, **answer)
+            return submission
+
+
+class SurveyReadSerializer(BasisModelSerializer):
+    questions = QuestionReadSerializer(many=True)
+
+    class Meta:
+        model = Survey
+        fields = ('id', 'title', 'active_from', 'event', 'questions')
 
 
 class SurveyReadDetailedSerializer(BasisModelSerializer):
-    submissions = SubmissionReadSerializer(many=True)
+    submissions = SubmissionReadDetailedSerializer(many=True)
     questions = QuestionReadSerializer(many=True)
-    event = EventReadSerializer()
 
     class Meta:
         model = Survey
@@ -105,25 +139,9 @@ class SurveyCreateAndUpdateSerializer(BasisModelSerializer):
         else:
             survey = super().create(validated_data)
 
-        for question in questions:
-            alternatives = question.pop('alternatives', [])
-            Question.objects.create(survey=survey, **question)
+        for data in questions:
+            alternatives = data.pop('alternatives', [])
+            question = Question.objects.create(survey=survey, **data)
             for alternative in alternatives:
                 Alternative.objects.create(question=question, **alternative)
         return survey
-
-
-class SubmissionReadDetailedSerializer(BasisModelSerializer):
-    user = PublicUserSerializer()
-    survey = SurveyReadSerializer()
-    answers = AnswerSerializer(many=True)
-
-    class Meta:
-        model = Submission
-        fields = ('id', 'user', 'survey', 'submitted', 'submitted_time', 'answers')
-
-
-class SubmissionCreateAndUpdateSerializer(BasisModelSerializer):
-    class Meta:
-        model = Submission
-        fields = ('id', 'user', 'survey')

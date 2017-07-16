@@ -1,7 +1,73 @@
 - fields:
-    title: Start
+    title: Survey1
     active_from: '2016-10-27T20:00:00+00:00'
     is_clone: False
     event: 1
   model: surveys.Survey
   pk: 1
+
+- fields:
+    survey: 1
+    question_type: 'RADIO_BUTTON'
+    question_text: 'Hva er kult?'
+    mandatory: True
+  model: surveys.Question
+  pk: 1
+
+- fields:
+    question: 1
+    alternative_type: 'RADIO_BUTTON'
+    alternative_text: 'Progge'
+  model: surveys.Alternative
+  pk: 1
+
+- fields:
+    question: 1
+    alternative_type: 'RADIO_BUTTON'
+    alternative_text: 'Feste'
+  model: surveys.Alternative
+  pk: 2
+
+- fields:
+    question: 1
+    alternative_type: 'RADIO_BUTTON'
+    alternative_text: 'Skole'
+  model: surveys.Alternative
+  pk: 3
+
+- fields:
+    survey: 1
+    question_type: 'RADIO_BUTTON'
+    question_text: 'Er du mann, kvinne eller ingenting?'
+    mandatory: True
+  model: surveys.Question
+  pk: 2
+
+- fields:
+    question: 2
+    alternative_type: 'RADIO_BUTTON'
+    alternative_text: 'Mann'
+  model: surveys.Alternative
+  pk: 3
+
+- fields:
+    question: 2
+    alternative_type: 'RADIO_BUTTON'
+    alternative_text: 'Kvinne'
+  model: surveys.Alternative
+  pk: 3
+
+- fields:
+    question: 2
+    alternative_type: 'RADIO_BUTTON'
+    alternative_text: 'Ingenting'
+  model: surveys.Alternative
+  pk: 4
+
+- fields:
+    title: Survey2
+    active_from: '2016-10-27T20:00:00+00:00'
+    is_clone: False
+    event: 2
+  model: surveys.Survey
+  pk: 2

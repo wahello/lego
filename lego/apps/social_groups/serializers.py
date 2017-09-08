@@ -14,7 +14,6 @@ class InterestGroupSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
-            'number_of_users',
             'description',
             'description_long',
             'logo',

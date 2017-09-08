@@ -28,7 +28,7 @@ class Membership(BasisModel):
     objects = MembershipManager()
 
     user = models.ForeignKey('users.User')
-    abakus_group = models.ForeignKey('users.AbakusGroup')
+    abakus_group = models.ForeignKey('users.AbakusGroup', related_name='memberships')
 
     role = models.CharField(max_length=20, choices=constants.ROLES, default=constants.MEMBER)
     is_active = models.BooleanField(default=True, db_index=True)

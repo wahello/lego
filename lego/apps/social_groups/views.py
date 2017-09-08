@@ -6,7 +6,7 @@ from lego.apps.social_groups.serializers import InterestGroupSerializer
 
 
 class InterestGroupViewSet(AllowedPermissionsMixin, viewsets.ModelViewSet):
-    queryset = InterestGroup.objects.all()
+    queryset = InterestGroup.objects.all().prefetch_related('memberships', 'memberships__user')
     serializer_class = InterestGroupSerializer
     ordering = 'id'
 

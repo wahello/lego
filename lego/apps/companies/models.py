@@ -11,6 +11,7 @@ from lego.apps.companies.permissions import (CompanyContactPermissionHandler,
 from lego.apps.files.models import FileField
 from lego.apps.users.models import User
 from lego.utils.models import BasisModel, PersistentModel, TimeStampModel
+from django.utils import timezone
 
 from .constants import (AUTUMN, COMPANY_EVENTS, OTHER_OFFERS, SEMESTER, SEMESTER_STATUSES, SPRING,
                         TRANSLATED_EVENTS, TRANSLATED_OTHER_OFFERS)
@@ -29,7 +30,6 @@ class Semester(BasisModel):
 class Company(BasisModel):
     name = models.CharField(max_length=100)
     student_contact = models.ForeignKey(User, related_name='companies', null=True)
-    previous_contacts = models.ManyToManyField(User)
 
     description = models.TextField(blank=True)
     phone = models.CharField(max_length=100, blank=True)
@@ -123,3 +123,12 @@ class CompanyInterest(PersistentModel, TimeStampModel):
             'others': ', '.join(others),
             'comment': self.comment
         }
+
+
+class PreviousStudentContact(BasisModel):
+    company = models.ForeignKey(Company, related_name='previous_student_contacts', null=True)
+    user = models.ForeignKey(User, related_name='previous_student_contacts')
+    current = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']

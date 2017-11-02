@@ -1,9 +1,10 @@
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.fields import CharField
 
 from lego.apps.comments.serializers import CommentSerializer
 from lego.apps.companies.models import (Company, CompanyContact, CompanyFile, CompanyInterest,
-                                        Semester, SemesterStatus)
+                                        PreviousStudentContact, Semester, SemesterStatus)
 from lego.apps.feed.registry import get_handler
 from lego.apps.files.fields import FileField, ImageField
 from lego.apps.users.fields import PublicUserField
@@ -54,6 +55,13 @@ class CompanyContactSerializer(BasisModelSerializer):
         company = Company.objects.get(pk=self.context['view'].kwargs['company_pk'])
         validated_data['company'] = company
         return super().create(validated_data)
+
+
+class PreviousStudentContactSerializer(BasisModelSerializer):
+
+    class Meta:
+        model = CompanyContact
+        fields = ('id', 'user', 'start', 'end')
 
 
 class CompanyFileSerializer(serializers.ModelSerializer):
@@ -109,6 +117,8 @@ class CompanyAdminDetailSerializer(BasisModelSerializer):
     student_contact = PublicUserField(required=False, allow_null=True, queryset=User.objects.all())
     semester_statuses = SemesterStatusDetailSerializer(many=True, read_only=True)
     company_contacts = CompanyContactSerializer(many=True, read_only=True)
+    previous_student_contacts = PreviousStudentContactSerializer(read_only=True, many=True, required=False,
+                                                                 allow_null=True)
 
     logo = ImageField(required=False, options={'height': 500})
     files = CompanyFileSerializer(many=True, read_only=True)
@@ -118,7 +128,44 @@ class CompanyAdminDetailSerializer(BasisModelSerializer):
         fields = ('id', 'name', 'student_contact', 'description', 'phone',
                   'company_type', 'website', 'address', 'payment_mail', 'comments',
                   'comment_target', 'semester_statuses', 'active', 'admin_comment',
-                  'logo', 'files', 'company_contacts')
+                  'logo', 'files', 'company_contacts', 'previous_student_contacts')
+
+    def create(self, validated_data):
+        print('creating company')
+        print(validated_data)
+        company = Company.objects.create(**validated_data)
+        company.save()
+
+        student_contact = None if 'student_contact' not in validated_data else validated_data['student_contact']
+        print('student_contact')
+        print(student_contact)
+        if student_contact is not None:
+            previous_student_contact = PreviousStudentContact.objects.create(company=company,
+                                                                             user=validated_data['student_contact'],
+                                                                             current=True)
+            previous_student_contact.save()
+        return company
+
+    def update(self, instance, validated_data):
+        print('updating company')
+        print(instance)
+        print(validated_data)
+
+        student_contact = None if 'student_contact' not in validated_data else validated_data['student_contact']
+        print('student_contact')
+        print(student_contact)
+        if student_contact is not None and student_contact != getattr(instance, 'student_contact'):
+            old_student_contact = PreviousStudentContact.objects.get_or_create(company=instance, user=student_contact)
+            old_student_contact.save()
+            old_student_contact.current = False
+            old_student_contact.save()
+
+            new_student_contact = PreviousStudentContact.objects.create(company=instance,
+                                                                        user=validated_data['student_contact'],
+                                                                        current=True)
+            new_student_contact.save()
+
+        return super().update(instance, validated_data)
 
 
 class CompanyInterestSerializer(serializers.ModelSerializer):

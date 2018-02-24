@@ -13,7 +13,7 @@ from lego.apps.events.exceptions import (
     RegistrationsExistInPool
 )
 from lego.apps.events.filters import EventsFilterSet
-from lego.apps.events.models import Event, Pool, Registration
+from lego.apps.events.models import Event, Pool, Registration, SharedMembershipOrdering
 from lego.apps.events.serializers.events import (
     EventAdministrateSerializer, EventCreateAndUpdateSerializer,
     EventReadAuthUserDetailedSerializer, EventReadSerializer, EventReadUserDetailedSerializer,
@@ -69,6 +69,15 @@ class EventViewSet(AllowedPermissionsMixin, viewsets.ModelViewSet):
         registrations = Registration.objects.select_related('user').annotate(
             shared_memberships=Count('user__abakus_groups', filter=query)
         ).order_by('-shared_memberships', 'user_id')
+
+        ordering = list(map(lambda registration: registration.id, registrations))
+        event = Event.objects.get(pk=self.kwargs['pk'])
+        print('asd', ordering)
+        registration_order, created = SharedMembershipOrdering.objects.get_or_create(event=event, user=user)
+        registration_order.ordering = ordering
+        registration_order.save()
+        print('dsa', registration_order.ordering)
+
         return registrations
 
     def user_should_see_regs(self, event, user):

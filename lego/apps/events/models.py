@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Count, Sum
@@ -795,3 +796,9 @@ class Registration(BasisModel):
             setattr(self, key, value)
         self.save(update_fields=kwargs.keys())
         return self
+
+
+class SharedMembershipOrdering(BasisModel):
+    user = models.ForeignKey(User, related_name='shared_membership_ordering', on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, related_name='shared_membership_ordering', on_delete=models.CASCADE)
+    ordering = ArrayField(models.IntegerField(), null=True)

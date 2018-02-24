@@ -7,7 +7,7 @@ from lego.apps.companies.fields import CompanyField
 from lego.apps.companies.models import Company
 from lego.apps.content.fields import ContentSerializerField
 from lego.apps.events.fields import ActivationTimeField, SpotsLeftField
-from lego.apps.events.models import Event, Pool
+from lego.apps.events.models import Event, Pool, SharedMembershipOrdering
 from lego.apps.events.serializers.pools import (
     PoolAdministrateSerializer, PoolCreateAndUpdateSerializer, PoolReadAuthSerializer,
     PoolReadSerializer
@@ -22,6 +22,15 @@ from lego.apps.users.fields import AbakusGroupField
 from lego.apps.users.models import AbakusGroup
 from lego.apps.users.serializers.users import PublicUserSerializer
 from lego.utils.serializers import BasisModelSerializer
+
+
+class SharedMembershipOrderingSerializer(BasisModelSerializer):
+    user = PublicUserSerializer
+
+    class Meta:
+        model = SharedMembershipOrdering
+        fields = ('ordering', 'user')
+        read_only = True
 
 
 class EventPublicSerializer(BasisModelSerializer):
@@ -72,6 +81,7 @@ class EventReadDetailedSerializer(TagSerializerMixin, BasisModelSerializer):
     active_capacity = serializers.ReadOnlyField()
     text = ContentSerializerField()
     created_by = PublicUserSerializer()
+    shared_membership_ordering = SharedMembershipOrderingSerializer(read_only=True, allow_null=True, many=True)
 
     class Meta:
         model = Event
@@ -81,7 +91,7 @@ class EventReadDetailedSerializer(TagSerializerMixin, BasisModelSerializer):
             'unregistration_deadline', 'company', 'responsible_group', 'active_capacity',
             'feedback_description', 'feedback_required', 'is_priced', 'price_member', 'price_guest',
             'use_stripe', 'payment_due_date', 'use_captcha', 'waiting_registration_count', 'tags',
-            'is_merged', 'heed_penalties', 'created_by', 'is_abakom_only'
+            'is_merged', 'heed_penalties', 'created_by', 'is_abakom_only', 'shared_membership_ordering'
         )
         read_only = True
 

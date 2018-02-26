@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Count, Sum
@@ -681,6 +682,7 @@ class Registration(BasisModel):
     pool = models.ForeignKey(
         Pool, null=True, related_name='registrations', on_delete=models.CASCADE
     )
+    possible_pools = ArrayField(models.IntegerField(), default=[])
     registration_date = models.DateTimeField(db_index=True, null=True)
     unregistration_date = models.DateTimeField(null=True)
     feedback = models.CharField(max_length=255, blank=True)

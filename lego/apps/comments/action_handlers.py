@@ -21,11 +21,6 @@ class CommentHandler(Handler):
         )
 
     def handle_create(self, instance, **kwargs):
-        if not (
-            isinstance(instance.parent, ObjectPermissionsModel) and not instance.parent.require_auth
-        ):
-            return
-
         activity = self.get_activity(instance)
         author = instance.created_by
         for feeds, recipients in self.get_feeds_and_recipients(instance):
@@ -41,18 +36,13 @@ class CommentHandler(Handler):
         if instance.parent and instance.parent.created_by != author:
             parent_author = instance.parent.created_by
             reply_activity = self.get_activity(instance, reply=True)
-            self.manager.add_activity(reply_activity, [parent_author.pk], [NotificationFeed])
+            self.manager.add_activity(reply_activity, [parent_author.pk], [NotificationFeed, UserFeed, PersonalFeed])
             reply_notification = CommentReplyNotification(
                 user=parent_author, target=instance.content_object, author=author
             )
             reply_notification.notify()
 
     def handle_delete(self, instance, **kwargs):
-        if not (
-            isinstance(instance.parent, ObjectPermissionsModel) and not instance.parent.require_auth
-        ):
-            return
-
         activity = self.get_activity(instance)
         for feeds, recipients in self.get_feeds_and_recipients(instance):
             self.manager.remove_activity(

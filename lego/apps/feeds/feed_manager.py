@@ -1,3 +1,4 @@
+from lego.apps.feeds.activity import Activity
 from lego.apps.feeds.constants import ADD, REMOVE
 
 from .tasks import feed_fanout

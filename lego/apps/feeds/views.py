@@ -2,6 +2,7 @@ from rest_framework import decorators, permissions, status, viewsets
 from rest_framework.response import Response
 
 from lego.apps.feeds.attr_cache import AttrCache
+from lego.apps.permissions.constants import VIEW
 
 from .feed_manager import feed_manager
 from .models import NotificationFeed, PersonalFeed, UserFeed
@@ -38,8 +39,11 @@ class FeedViewSet(viewsets.GenericViewSet):
             cache = AttrCache()
             lookup = cache.bulk_lookup(content_strings)
 
+        final_items = []
+
         for item in data:
             context = {}
+            item_target = None
 
             activities = item.get('activities')
             if activities:
@@ -50,13 +54,18 @@ class FeedViewSet(viewsets.GenericViewSet):
                     actor = activity.get('actor')
                     if target in lookup.keys():
                         context[target] = lookup[target]
+                        if item_target is None:
+                            item_target = context[target]
                     if object in lookup.keys():
                         context[object] = lookup[object]
                     if actor in lookup.keys():
                         context[actor] = lookup[actor]
             item['context'] = context
 
-        return data
+            if item_target and self.request.user.has_perm(VIEW, item_target):
+                final_items.append(item)
+
+        return final_items
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

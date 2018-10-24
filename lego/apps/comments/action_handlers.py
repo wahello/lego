@@ -6,7 +6,6 @@ from lego.apps.feeds.activity import Activity
 from lego.apps.feeds.feed_manager import feed_manager
 from lego.apps.feeds.models import NotificationFeed, PersonalFeed, UserFeed
 from lego.apps.feeds.verbs import CommentReplyVerb, CommentVerb
-from lego.apps.permissions.models import ObjectPermissionsModel
 
 
 class CommentHandler(Handler):
@@ -36,7 +35,11 @@ class CommentHandler(Handler):
         if instance.parent and instance.parent.created_by != author:
             parent_author = instance.parent.created_by
             reply_activity = self.get_activity(instance, reply=True)
-            self.manager.add_activity(reply_activity, [parent_author.pk], [NotificationFeed, UserFeed, PersonalFeed])
+            self.manager.add_activity(
+                reply_activity,
+                [parent_author.pk],
+                [NotificationFeed, UserFeed, PersonalFeed]
+            )
             reply_notification = CommentReplyNotification(
                 user=parent_author, target=instance.content_object, author=author
             )

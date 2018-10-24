@@ -2,7 +2,6 @@ from rest_framework import decorators, permissions, status, viewsets
 from rest_framework.response import Response
 
 from lego.apps.feeds.attr_cache import AttrCache
-from lego.apps.permissions.constants import VIEW
 
 from .feed_manager import feed_manager
 from .models import NotificationFeed, PersonalFeed, UserFeed
@@ -22,6 +21,8 @@ class FeedViewSet(viewsets.GenericViewSet):
         Map over the feed here to attach more information to each element.
         """
         content_strings = set()
+        permission_strings = set()
+        user = self.request.user
 
         for item in data:
             activities = item.get('activities')
@@ -31,13 +32,16 @@ class FeedViewSet(viewsets.GenericViewSet):
                     target = activity.get('target')
                     object = activity.get('object')
                     actor = activity.get('actor')
+                    # TODO: special use case, only edit users can view comments on a company
+                    permission_strings.add(AttrCache.generate_permission_string(target, user.id)
+                                           ) if target else None
                     content_strings.add(target) if target else None
                     content_strings.add(object) if object else None
                     content_strings.add(actor) if actor else None
 
         if content_strings:
             cache = AttrCache()
-            lookup = cache.bulk_lookup(content_strings)
+            lookup = cache.bulk_lookup(user, content_strings, permission_strings)
 
         final_items = []
 
@@ -62,7 +66,7 @@ class FeedViewSet(viewsets.GenericViewSet):
                         context[actor] = lookup[actor]
             item['context'] = context
 
-            if item_target and self.request.user.has_perm(VIEW, item_target):
+            if item_target:
                 final_items.append(item)
 
         return final_items

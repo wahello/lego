@@ -1,6 +1,7 @@
 from django.core.cache import cache
 from structlog import get_logger
 
+from lego.apps.permissions.constants import VIEW
 from lego.utils.content_types import string_to_model_cls
 
 from . import attr_renderers
@@ -33,6 +34,10 @@ class AttrCache:
 
     RELATED_FIELDS = {'meetings.meetinginvitation': ['meeting']}
 
+    @staticmethod
+    def generate_permission_string(content_type, user_id):
+        return f'{content_type}-user-{user_id}-has_permission-view'
+
     def lookup_cache(self, content_strings):
         """
         Lookup cache keys
@@ -57,7 +62,7 @@ class AttrCache:
              for key, value in items.items()}, timeout=60
         )
 
-    def extract_properties(self, content_type, ids):
+    def extract_properties(self, user, permission_strings, permission_results, content_type, ids):
         """
         Lookup the values we need from the database.
         Customize the renderers dict to change the values added to the feed.
@@ -78,7 +83,18 @@ class AttrCache:
         for instance in queryset:
             data = render(instance)
             data['content_type'] = content_type
-            result[f'{content_type}-{instance.pk}'] = data
+            content_type_id = f'{content_type}-{instance.pk}'
+            permission_string = AttrCache.generate_permission_string(content_type_id, user.id)
+            if permission_string in permission_strings:
+                if permission_string not in permission_results.keys():
+                    has_permission = user.has_perm(VIEW, instance)
+                    result[permission_string] = has_permission
+                    if has_permission:
+                        result[content_type_id] = data
+                elif permission_results[permission_string]:
+                    result[content_type_id] = data
+            else:
+                result[content_type_id] = data
 
         return result
 
@@ -93,11 +109,14 @@ class AttrCache:
 
         for content_string in content_strings:
             try:
-                content_type, pk = content_string.split('-', maxsplit=1)
-                pk = int(pk)
-
-                if content_type not in self.RENDERS.keys():
-                    continue
+                content_split = content_string.split('-')
+                if len(content_split) != 2:
+                    content_type, pk = content_string, None
+                else:
+                    content_type, pk = content_split
+                    pk = int(pk)
+                    if content_type not in self.RENDERS.keys():
+                        continue
 
                 valid.setdefault(content_type, set()).add(pk)
             except ValueError:
@@ -105,7 +124,7 @@ class AttrCache:
 
         return valid
 
-    def bulk_lookup(self, content_strings):
+    def bulk_lookup(self, user, content_strings, permission_strings):
         """
         Takes a set of content_strings and returns a list with information about all found items.
         Steps:
@@ -116,19 +135,35 @@ class AttrCache:
             4. Extract the information we need from each element we found in the database
             5. Cache the values we found in the database
         """
-        result = self.lookup_cache(content_strings)
+        permission_result = self.lookup_cache(permission_strings)
 
-        lookup_required = content_strings - set(result.keys())
+        for permission_string, has_permission in permission_result.items():
+            if not has_permission:
+                content_type, _ = permission_string.split('-user', maxsplit=1)
+                content_strings.remove(content_type)
+
+        content_result = self.lookup_cache(content_strings)
+
+        lookup_required = content_strings - set(content_result.keys())
+
+        for content_type, value in content_result.items():
+            permission_string = AttrCache.generate_permission_string(content_type, user.id)
+            if permission_string in permission_strings \
+                    and permission_string not in permission_result:
+                lookup_required.add(content_type)
+
         lookup_groups = self.filter_lookup(lookup_required)
 
         lookups = {}
 
         for content_type, ids in lookup_groups.items():
-            lookup = self.extract_properties(content_type, ids)
+            lookup = self.extract_properties(
+                user, permission_strings, permission_result, content_type, ids
+            )
             lookups.update(lookup)
 
         self.save_lookups(lookups)
 
-        result.update(lookups)
+        content_result.update(lookups)
 
-        return result
+        return content_result
